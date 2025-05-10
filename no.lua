@@ -153,7 +153,7 @@ local toggle = PlayerTab:CreateToggle({
 	Callback = function(Value)
 		_G.InfiniteChakra = Value
 
-        while _G.InfiniteChakra do
+        while _G.InfiniteChakra do task.wait(.3)
 		    game:GetService("ReplicatedStorage").RemoteEvents.GainChi:FireServer()
         end
 	end
