@@ -144,5 +144,19 @@ task.spawn(function()
     end
 end)
 
+local PlayerTab = Window:CreateTab("Player", 4483362458) -- Title, Image
+
+
+local toggle = Tab3:CreateToggle({
+	Name = "InfiniteChakra",
+	toggleState = false,
+	Callback = function(Value)
+		_G.InfiniteChakra = Value
+
+    while _G.InfiniteChakra do
+		game:GetService("ReplicatedStorage").RemoteEvents.GainChi:FireServer()
+	end
+})
+game:GetService("ReplicatedStorage").RemoteEvents.GainChi:FireServer()
 
 
