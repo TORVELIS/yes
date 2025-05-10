@@ -147,7 +147,7 @@ end)
 local PlayerTab = Window:CreateTab("Player", 4483362458) -- Title, Image
 
 
-local toggle = Tab3:CreateToggle({
+local toggle = PlayerTab:CreateToggle({
 	Name = "InfiniteChakra",
 	toggleState = false,
 	Callback = function(Value)
