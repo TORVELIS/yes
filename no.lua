@@ -53,7 +53,7 @@ end
 })
 
 local Button = Tab:CreateButton({
-   Name = "Button Example",
+   Name = "Prestige",
    Callback = function()
    game:GetService("ReplicatedStorage").Prestiging.Prestige:FireServer()
    end,
