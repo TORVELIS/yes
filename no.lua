@@ -34,7 +34,7 @@ local Window = Rayfield:CreateWindow({
    }
 })
 
-local Tab = Window:CreateTab("Tab Example", 4483362458) -- Title, Image
+local Tab = Window:CreateTab("Main", 4483362458) -- Title, Image
 
 local Section = Tab:CreateSection("Section Example")
 
@@ -53,8 +53,96 @@ end
 })
 
 local Button = Tab:CreateButton({
-   Name = "Prestige",
+   Name = "Button Example",
    Callback = function()
    game:GetService("ReplicatedStorage").Prestiging.Prestige:FireServer()
    end,
 })
+
+
+local Tab2 = Window:CreateTab("Broken stuff", 4483362458) -- Title, Image
+
+local Slider = Tab2:CreateSlider({
+   Name = "Slider Example",
+   Range = {0, 500},
+   Increment = 1,
+   Suffix = "Points",
+   CurrentValue = 250,
+   Flag = "Slider1", -- A flag is the identifier for the configuration file, make sure every element has a different flag if you're using configuration saving to ensure no overlaps
+   Callback = function(Value)
+        _G.Points = Value
+   end,
+})
+
+local Button = Tab2:CreateButton({
+   Name = "Give Points",
+   Callback = function()
+    game:GetService("Players").LocalPlayer.Data.PointsS.Value = _G.Points
+    game:GetService("Players").LocalPlayer.Data.Points.Value = _G.Points
+    end,lace
+})
+
+
+local Tab3 = Window:CreateTab("Auto Spin", 4483362458) -- Title, Image
+
+-- Global state
+_G.AutoSpin = false
+_G.DesiredClans = {}
+
+-- Dropdown to select desired clans
+local Dropdown = Tab3:CreateDropdown({
+    Name = "Select Desired Clans",
+    Options = {
+        "Aburame", "Akafura", "Akimichi", "Chinoike", "Hatake", "Hoshigaki", "Hozuki",
+        "Iburi", "Inuzuka", "Kaguya", "Kamizuru", "Kazesuna", "Lee", "Miyajima", "Nara",
+        "Oribe", "Rai", "Sarutobi", "Uzumaki", "Yotsuki", "Yuki", "Senju", "Uchiha",
+        "Namikaze", "Karatachi", "Jashin", "Hyuga", "Mu"
+    },
+    CurrentOption = {},
+    MultipleOptions = true,
+    Flag = "Dropdown1",
+    Callback = function(options)
+        _G.DesiredClans = options
+    end,
+})
+
+-- Toggle to control AutoSpin
+local toggle = Tab3:CreateToggle({
+	Name = "Auto Spin",
+	toggleState = false,
+	Callback = function(Value)
+		_G.AutoSpin = Value
+		print("AutoSpin is now: " .. tostring(Value))
+	end
+})
+
+-- Store current clan
+local CurrentClan
+
+-- Monitor the player's backpack to detect current clan
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        for _, v in pairs(game:GetService("Players").LocalPlayer.Backpack:GetDescendants()) do
+            if v.Name == "Clan" then
+                CurrentClan = v.Parent.Name
+                break
+            end
+        end
+    end
+end)
+
+-- AutoSpin loop
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        if _G.AutoSpin and CurrentClan and #_G.DesiredClans > 0 then
+            if not table.find(_G.DesiredClans, CurrentClan) then
+                game:GetService("ReplicatedStorage").TraitEvent:FireServer()
+            end
+        end
+    end
+end)
+
+
+
