@@ -74,10 +74,12 @@ _G.IsFarming = false
 
 local function getStaticBossList()
 	local list = {}
-	for _, obj in pairs(Workspace.BossScrolls:GetChildren()) do
-		if obj:IsA("Model") and string.lower(obj.Name):find("boss") then
-			local cleanName = string.gsub(obj.Name, "[Bb][Oo][Ss][Ss]", "")
-			table.insert(list, cleanName)
+	if Workspace:FindFirstChild("BossScrolls") then
+		for _, obj in pairs(Workspace.BossScrolls:GetChildren()) do
+			if obj:IsA("Model") and string.lower(obj.Name):find("boss") then
+				local cleanName = string.gsub(obj.Name, "[Bb][Oo][Ss][Ss]", "")
+				table.insert(list, cleanName)
+			end
 		end
 	end
 	return list
@@ -90,7 +92,9 @@ local BossDropdown = Tab:CreateDropdown({
 	MultipleOptions = false,
 	Flag = "BossDropdown",
 	Callback = function(Option)
-		_G.SelectedBoss = Option[1]
+		if Option and Option[1] then
+			_G.SelectedBoss = Option[1]
+		end
 	end,
 })
 
@@ -103,19 +107,29 @@ Tab:CreateToggle({
 			task.spawn(function()
 				while _G.IsFarming do
 					task.wait(0.05)
+
+					if not Workspace:FindFirstChild("BossScrolls") then continue end
+					if not Workspace.BossScrolls:FindFirstChild("Bosses") then continue end
+
 					local targetBoss = nil
-					-- Loop through all bosses in the "Bosses" folder
 					for _, boss in pairs(Workspace.BossScrolls.Bosses:GetChildren()) do
-						if boss:IsA("Model") and boss:FindFirstChild("HumanoidRootPart") then
-							-- Check if the dropdown selected value is a substring of the boss's name
-							if string.lower(boss.Name):find(string.lower(_G.SelectedBoss)) then
-								targetBoss = boss
-								break
-							end
+						if boss:IsA("Model")
+							and boss:FindFirstChild("HumanoidRootPart")
+							and boss:FindFirstChild("Humanoid")
+							and boss:FindFirstChild("Humanoid").Health > 0
+							and not Players:GetPlayerFromCharacter(boss) -- not a player
+							and string.lower(boss.Name):find(string.lower(_G.SelectedBoss))
+						then
+							targetBoss = boss
+							break
 						end
 					end
-					-- If a matching boss is found, teleport and spin around it
-					if targetBoss then
+
+					if targetBoss and targetBoss:FindFirstChild("HumanoidRootPart") then
+						if not character or not hrp or hrp.Parent == nil then
+							character = player.Character or player.CharacterAdded:Wait()
+							hrp = character:WaitForChild("HumanoidRootPart")
+						end
 						local center = targetBoss.HumanoidRootPart.Position
 						local angle = tick() * 4
 						local offset = Vector3.new(math.cos(angle) * 5, 0, math.sin(angle) * 5)
@@ -126,6 +140,7 @@ Tab:CreateToggle({
 		end
 	end,
 })
+
 
 
 
@@ -216,6 +231,7 @@ local AllMoves = Tab2:CreateButton({
 local Tab3 = Window:CreateTab("Auto Spin", 4483362458)
 
 
+
 _G.AutoSpin = false
 _G.DesiredClans = {}
 
@@ -274,6 +290,7 @@ task.spawn(function()
     end
 end)
 
+
 local PlayerTab = Window:CreateTab("Player", 4483362458)
 
 
@@ -306,42 +323,47 @@ local toggle = PlayerTab:CreateToggle({
 
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local enterCombat = ReplicatedStorage:WaitForChild("EnterCombat")
+
+local enterCombat = ReplicatedStorage:FindFirstChild("EnterCombat")
 local leaveCombat = ReplicatedStorage:FindFirstChild("LeaveCombat")
 
 _G.BlockEnterCombat = false
 
+-- Only continue if enterCombat RemoteEvent exists
+if enterCombat then
+	local success, mt = pcall(getrawmetatable, game)
+	if success and mt then
+		setreadonly(mt, false)
 
-local mt = getrawmetatable(game)
-setreadonly(mt, false)
+		local oldNamecall = mt.__namecall
 
-local oldNamecall = mt.__namecall
+		mt.__namecall = newcclosure(function(self, ...)
+			local method = getnamecallmethod()
 
-mt.__namecall = newcclosure(function(self, ...)
-    local method = getnamecallmethod()
+			if method == "FireServer" and self == enterCombat then
+				if _G.BlockEnterCombat then
+					if leaveCombat and typeof(leaveCombat) == "Instance" and leaveCombat:IsA("RemoteEvent") then
+						leaveCombat:FireServer()
+					end
+					return nil
+				end
+			end
 
-    if method == "FireServer" and self == enterCombat then
-        if _G.BlockEnterCombat then
-            if leaveCombat then
-                leaveCombat:FireServer()
-            end
-            return nil
-        end
-    end
+			return oldNamecall(self, ...)
+		end)
 
-    return oldNamecall(self, ...)
-end)
-
-setreadonly(mt, true)
+		setreadonly(mt, true)
+	end
+end
 
 local Toggle = PlayerTab:CreateToggle({
-    Name = "Block EnterCombat",
-    toggleState = true,
-    Callback = function(Value)
-        _G.BlockEnterCombat = Value
-        print("🔁 EnterCombat block toggled:", Value)
-    end
+	Name = "Block EnterCombat",
+	toggleState = true,
+	Callback = function(Value)
+		_G.BlockEnterCombat = Value
+	end,
 })
+
 
 
 
