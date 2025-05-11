@@ -334,6 +334,19 @@ local Button4 = Tab2:CreateButton({
 })
 
 
+local Section4 = Tab2:CreateSection("Server Stuff")
+
+
+local Button6 = Tab2:CreateButton({
+   Name = "Rollback / Destroy Server",
+   Callback = function()
+        for i = 1, 100000 do
+    game:GetService("ReplicatedStorage").Missions.Leaf.BRANK.BCompleted:FireServer()
+end
+    end,
+})
+
+
 local Tab3 = Window:CreateTab("Auto Spin", 4483362458)
 
 
