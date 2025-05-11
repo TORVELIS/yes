@@ -142,6 +142,70 @@ Tab:CreateToggle({
 })
 
 
+local Section = Tab:CreateSection("War Farm")
+
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+
+_G.IsFarming = false
+
+local function getHRP()
+    local character = player.Character or player.CharacterAdded:Wait()
+    return character:WaitForChild("HumanoidRootPart")
+end
+
+local function isValidBoss(boss)
+    if boss:IsA("Model") and boss:FindFirstChild("Humanoid") then
+        local humanoid = boss:FindFirstChild("Humanoid")
+        if humanoid.Parent and not Players:GetPlayerFromCharacter(humanoid.Parent) then
+            return true
+        end
+    end
+    return false
+end
+
+local function teleportToBoss(boss, hrp)
+    if isValidBoss(boss) then
+        local targetHumanoidRootPart = boss:FindFirstChild("HumanoidRootPart")
+        if targetHumanoidRootPart then
+            local center = targetHumanoidRootPart.Position
+            local angle = tick() * 4
+            local offset = Vector3.new(math.cos(angle) * 5, 0, math.sin(angle) * 5)
+            hrp.CFrame = CFrame.new(center + offset)
+        end
+    end
+end
+
+local function autoFarm()
+    while _G.IsFarming do
+        task.wait(0.1)
+        local hrp
+        pcall(function()
+            hrp = getHRP()
+        end)
+        if not hrp then continue end
+
+        for _, boss in pairs(Workspace:GetChildren()) do
+            teleportToBoss(boss, hrp)
+        end
+    end
+end
+
+local Toggle = Tab:CreateToggle({
+    Name = "Auto Boss Farm (Teleport to Boss and Spin)",
+    CurrentValue = false,
+    Flag = "BossFarmToggle",
+    Callback = function(Value)
+        _G.IsFarming = Value
+        if Value then
+            task.spawn(autoFarm)
+        end
+    end,
+})
+
+
 
 
 local Tab2 = Window:CreateTab("Broken stuff", 4483362458)
@@ -193,7 +257,7 @@ local Button = Tab2:CreateButton({
 local Section2 = Tab2:CreateSection("Holy Circle")
 
 local Slider = Tab2:CreateSlider({
-   Name = "Slider Example",
+   Name = "Points Giver",
    Range = {1, 250},
    Increment = 1,
    Suffix = "Points",
@@ -224,6 +288,48 @@ local AllMoves = Tab2:CreateButton({
                 v:FireServer()
             end
         end
+    end,
+})
+
+
+local Section3 = Tab2:CreateSection("Spawn NPC")
+
+local Slider = Tab2:CreateSlider({
+   Name = "Npc Spawning",
+   Range = {1, 250},
+   Increment = 1,
+   Suffix = "Amount",
+   CurrentValue = 25,
+   Flag = "Slider3",
+   Callback = function(Value)
+        _G.SpawnNpc = Value
+   end,
+})
+
+local Button2 = Tab2:CreateButton({
+   Name = "Spawn NPC",
+   Callback = function()
+        for i = 1, _G.SpawnNpc do
+    game:GetService("ReplicatedStorage").Missions.Leaf.BRANK.BCompleted:FireServer()
+end
+    end,
+})
+
+local Button3 = Tab2:CreateButton({
+   Name = "Destroy Spawned NPC's",
+   Callback = function()
+        for i,v in pairs(workspace.QuestFolder:GetDescendants()) do
+            if v.Name == "Humanoid" then
+                v.Health = 0
+            end
+        end
+    end,
+})
+
+local Button4 = Tab2:CreateButton({
+   Name = "Use Multi Shadow Clone",
+   Callback = function()
+        game:GetService("ReplicatedStorage").SkillRemotes.Jutsu.SubAbility.MultiShadowClone.RemoteEvent:FireServer()
     end,
 })
 
@@ -368,6 +474,23 @@ local Toggle = PlayerTab:CreateToggle({
 
 
 local plrAndSpawns = Window:CreateTab("Teleports and Spawns", 4483362458)
+
+local Section5 = plrAndSpawns:CreateSection("S Rank Mission")
+
+local Button2 = plrAndSpawns:CreateButton({
+    Name = "Auto Collect Scrolls",
+    Callback = function()
+        for i,v in pairs(workspace.ScrollsSetup.ForbiddenJutsus:GetDescendants()) do
+            if v.Name == "Click" then
+                game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame
+                task.wait(.3)
+                fireproximityprompt(v.ProximityPrompt)
+                task.wait(.3)
+            end
+        end
+    end,
+})
+
 
 local Section1 = plrAndSpawns:CreateSection("Boss Teleports")
 
