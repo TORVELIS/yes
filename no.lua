@@ -483,7 +483,39 @@ local Toggle = PlayerTab:CreateToggle({
 	end,
 })
 
+local Section = PlayerTab:CreateSection("Jutsu Unlocker")
 
+
+local jutsus = {}
+
+
+for i,v in pairs(game:GetService("Players").LocalPlayer.PlayerGui["Skill Tree"].Main["Central Chakra"].ClanJutsu:GetDescendants()) do
+    if v:IsA("ImageButton") and not string.find(v.Name:lower(), "clan") then
+        table.insert(jutsus, v.Name)
+    end
+end
+
+local Dropdown = PlayerTab:CreateDropdown({
+    Name = "Select Jutsu to unlock",
+    Options = jutsus,
+    CurrentOption = {},
+    MultipleOptions = false,
+    Flag = "Dropdown7",
+    Callback = function(options)
+        _G.SelectedJutsu = options
+    end,
+})
+
+local Button1 = PlayerTab:CreateButton({
+   Name = "Unlock Jutsu",
+   Callback = function()
+        for i,v in pairs(game:GetService("Players").LocalPlayer.PlayerGui["Skill Tree"].Main["Central Chakra"].ClanJutsu:GetDescendants()) do
+            if v.Name == unpack(_G.SelectedJutsu) then
+                v:FindFirstChild("Handler"):FindFirstChild("RemoteEvent"):FireServer()
+            end
+        end
+    end,
+})
 
 
 local plrAndSpawns = Window:CreateTab("Teleports and Spawns", 4483362458)
